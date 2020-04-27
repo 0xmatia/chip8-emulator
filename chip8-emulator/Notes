@@ -5,7 +5,7 @@ Hey, here begins my journy - building a super simple CHIP-8 emulator!
         * https://blog.scottlogic.com/2017/12/13/chip8-emulator-webassembly-rust.html
         * https://blog.coreytaylor.me/building-a-chip8-emulator-in-rust-part-i-1a007f56451
         * http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
-        * http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+        * http://devernay.free.fr/hacks/chip8/C8TECH10.HTM - *Architecure specification*
         * http://www.multigesture.net/wp-content/uploads/mirror/goldroad/chip8.shtml
 
 I will start with no sound and with printing to display and then move to writing to screen 
@@ -22,7 +22,7 @@ Notes:
         There are multiple registers in the chip-8 architecture. There are 16 general-purpose
         registers names Vx (x=0-F). VF is a flag and should not be modified. There is also the I
         register used to store memory addresses (only uses 12 bits, so its size is 16 bits - 2bytes).
-        There are two times: sound and delay registers. More on them in "Research".
+        There are two timers: sound and delay registers. More on them in "Research".
         There is of course the program counter (PC) register, and the stack pointer (SP) which is *8*
         bit. SP is used to access the stack. Stack is an array of 16 16bit values used to store
         subroutines return addresses. We can only have 16 nested routines.
@@ -30,6 +30,12 @@ Notes:
         64x32 display. It can draw on the screen using pre-defined sprites (0-9, A-F). The sprites
         are 5x4 and should be put in the unused memory space (0x0); Easiest way is just to define
         them as binary;
+    Opcodes:
+        I need to implement about ~35 different opcodes (some of them are no longer in use, 
+        some of them are for the 'super achitecture'). I will implement the basic ones.
+        See instruction set for chip8 online for full opcode list. 
+        Each opcode is 2bytes (0xABCD), so every cycle we increment the pc by 2.
+        I will use bitwise operation on the opcode in order to extract different bits out of it.
 General:
     ☐ Create a struct that represent a chip-8 machine
         It should contain memory, stack, sp, pc, 16 registers, i register, two timers (?)
