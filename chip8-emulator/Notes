@@ -37,9 +37,13 @@ Notes:
         Each opcode is 2bytes (0xABCD), so every cycle we increment the pc by 2.
         I will use bitwise operation on the opcode in order to extract different bits out of it.
 General:
-    ☐ Create a struct that represent a chip-8 machine
+    ✔ Create a struct that represent a chip-8 machine @started(20-04-27 17:43) @done(20-04-27 18:38) @lasted(55m25s)
         It should contain memory, stack, sp, pc, 16 registers, i register, two timers (?)
         display + keyboard
+    ✔ Read a ROM from file and place it in memory correctly. @started(20-04-27 18:38) @done(20-04-27 19:24) @lasted(46m9s)
+        I can now load a rom to RAM (at 0x200). In addition to that, I wrote a function thats print
+        the memory starting from specified location. This way I can verify the memory looks as 
+        it should be.
         
     ☐ Create a basic games loop
     ☐ Decode an opcode
