@@ -46,8 +46,8 @@ General:
         it should be.
     ☐ Create a basic games loop
         ✔ Decode an opcode @started(20-04-28 12:52) @done(20-04-28 14:05) @lasted(1h13m58s)
-        ☐ Extract from it the 4 nibbles + kk, nnn, n, x, y. @started(20-04-28 14:06)
-        ☐ Implement opcodes:
+        ✔ Extract from it the 4 nibbles + kk, nnn, n, x, y. @started(20-04-28 14:06) @done(20-04-28 14:32) @lasted(26m10s)
+        ☐ Implement opcodes: @started(20-04-28 14:33)
             There are about 35 opcodes which I need to implement 
         ☐ Hanlde timers
         ☐ add keyboard array

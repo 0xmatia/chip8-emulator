@@ -92,9 +92,26 @@ impl Chip8 {
         println!("nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}", nnn, kk, n, x, y);
 
         match nibbles { 
+            // Clear dispaly
+            (0x0, 0x0, 0xE, 0x0) => return Err(String::from("Not implemented yet")),
+            // RET - return from subroutine
+            (0x0, 0x0, 0xE, 0xE) => return Err(String::from("Not implemented yet")),
+            // 1nnn: sets pc to nnn
+            (0x1, _, _, _) => self.op_1nnn(nnn),
             _ => return Err(String::from("Unknown intruction"))
         }
         Ok(())
     }
+
+    // handles the 1nnn opcode
+    // sets pc to whatever nnn is
+    pub fn op_1nnn(&mut self, nnn: u16)
+    {
+        self.pc = nnn;
+        println!("PC: {:#06X}, nnn: {:#05X}", self.pc, nnn);
+    }
 }
 
+#[cfg(test)]
+#[path = "./opcode_tests.rs"]
+mod opcode_tests;
