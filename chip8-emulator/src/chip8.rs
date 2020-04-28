@@ -76,10 +76,24 @@ impl Chip8 {
         
         // increment the program counter
         self.pc += 2;
-
-        // extract data from the opcode: kk, nnn, n, x, y
         
+        let nibbles = (
+            (opcode & 0xF000) >> 12 as u8,
+            (opcode & 0x0F00) >> 8 as u8,
+            (opcode & 0x00F0) >> 4 as u8,
+            (opcode & 0x000F) as u8,
+        );
+        // extract data from the opcode: kk, nnn, n, nn x, y
+        let nnn = opcode & 0x0FFF;
+        let kk = opcode & 0x00FF; // or nn
+        let n = opcode & 0x000F;
+        let x = (opcode >> 8) & 0x000F;
+        let y = (opcode >> 4) & 0x000F;
+        println!("nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}", nnn, kk, n, x, y);
 
+        match nibbles { 
+            _ => return Err(String::from("Unknown intruction"))
+        }
         Ok(())
     }
 }
