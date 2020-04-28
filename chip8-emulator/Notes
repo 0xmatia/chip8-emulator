@@ -44,12 +44,16 @@ General:
         I can now load a rom to RAM (at 0x200). In addition to that, I wrote a function thats print
         the memory starting from specified location. This way I can verify the memory looks as 
         it should be.
-        
     ☐ Create a basic games loop
-    ☐ Decode an opcode
-        ☐ Extract from it the 4 nibbles + kk, nnn, n, x, y
-    ☐ Implement opcodes:
-        There are about 35 opcodes which I need to implement 
+        ✔ Decode an opcode @started(20-04-28 12:52) @done(20-04-28 14:05) @lasted(1h13m58s)
+        ☐ Extract from it the 4 nibbles + kk, nnn, n, x, y. @started(20-04-28 14:06)
+        ☐ Implement opcodes:
+            There are about 35 opcodes which I need to implement 
+        ☐ Hanlde timers
+        ☐ add keyboard array
+        ☐ Print to screen - I will start with just printing to console
+    ☐ Implement (?) the fmt::debug in order to print the chip8 status
+
 
 
 

@@ -61,10 +61,26 @@ impl Chip8 {
     //For debuging, this function will print memory from the requested location
     pub fn print_memory(&mut self, start_index: u16) {
         for pointer in start_index..RAM_SIZE as u16 {
-            println!("{:#X}: {:#X}", pointer, self.memory[pointer as usize]);
+            println!("{:#X}: {:#04X}", pointer, self.memory[pointer as usize]);
             thread::sleep(time::Duration::from_millis(10));
             
         }
+    }
+
+    pub fn cycle(&mut self) -> Result<(), String> {
+        // Decode the opcode:
+        let hi = self.memory[self.pc as usize] as u16;
+        let lo = self.memory[(self.pc + 1) as usize] as u16;
+        let opcode = (hi << 8) | lo;
+        println!("Opcode: {:#06X}", opcode);
+        
+        // increment the program counter
+        self.pc += 2;
+
+        // extract data from the opcode: kk, nnn, n, x, y
+        
+
+        Ok(())
     }
 }
 
