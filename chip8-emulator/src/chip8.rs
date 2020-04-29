@@ -135,6 +135,12 @@ impl Chip8 {
             (0x8, _, _, 0x0) => self.op_8xy0(x, y),
             // sets v[x] = v[x] | v[y]
             (0x8, _, _, 0x1) => self.op_8xy1(x, y),
+            // sets v[x] = v[x] & v[y]
+            (0x8, _, _, 0x2) => self.op_8xy2(x, y),
+            // sets v[x] = v[x] ^ v[y]
+            (0x8, _, _, 0x3) => self.op_8xy3(x, y),
+            // adds vx and vy
+            (0x8, _, _, 0x4) => self.op_8xy4(x, y),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
@@ -210,6 +216,29 @@ impl Chip8 {
     // set vx = vx | vy
     fn op_8xy1(&mut self, x: u8, y: u8) {
         self.v[x as usize] = self.v[x as usize] | self.v[y as usize];
+    }
+
+    // set vx = vx & vy
+    fn op_8xy2(&mut self, x: u8, y: u8) {
+        self.v[x as usize] = self.v[x as usize] & self.v[y as usize];
+    }
+
+    // set vx = vx & vy
+    fn op_8xy3(&mut self, x: u8, y: u8) {
+        self.v[x as usize] = self.v[x as usize] ^ self.v[y as usize];
+    }
+    // adds vx and vy; turns on carry flag if necessery;
+    fn op_8xy4(&mut self, x: u8, y: u8) {
+        let vx: u16 = self.v[x as usize] as u16;
+        let vy: u16 = self.v[y as usize] as u16;
+        let result: u16 = vx + vy;
+        println!("{:X}", result as u8);
+        self.v[x as usize] = result as u8;
+        if result > 0x00FF {
+            self.v[0xF] = 0x1;
+        } else {
+            self.v[0xF] = 0x0;
+        }
     }
 }
 

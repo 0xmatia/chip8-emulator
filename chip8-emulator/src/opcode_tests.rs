@@ -126,3 +126,74 @@ fn op_8xy1() {
 
     assert_hex::assert_eq_hex!(instance.v[0xA], 0xCA);
 }
+
+#[test]
+fn op_8xy2() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x6A;
+    instance.memory[0x201] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0x6B;
+    instance.memory[0x203] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x204] = 0x8A;
+    instance.memory[0x205] = 0xB2;
+    instance.cycle().unwrap();
+
+    assert_hex::assert_eq_hex!(instance.v[0xA], 0xCA);
+}
+
+#[test]
+fn op_8xy3() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x6A;
+    instance.memory[0x201] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0x6B;
+    instance.memory[0x203] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x204] = 0x8A;
+    instance.memory[0x205] = 0xB3;
+    instance.cycle().unwrap();
+
+    assert_hex::assert_eq_hex!(instance.v[0xA], 0x0);
+}
+
+#[test]
+fn op_8xy4() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x6A;
+    instance.memory[0x201] = 0x5;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0x6B;
+    instance.memory[0x203] = 0x02;
+    instance.cycle().unwrap();
+
+    instance.memory[0x204] = 0x8A;
+    instance.memory[0x205] = 0xB4;
+    instance.cycle().unwrap();
+    assert_hex::assert_eq_hex!(instance.v[0xA], 0x07);
+}
+
+#[test]
+fn op_8xy4_overflow() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x6A;
+    instance.memory[0x201] = 0xFF;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0x6B;
+    instance.memory[0x203] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x204] = 0x8A;
+    instance.memory[0x205] = 0xB4;
+    instance.cycle().unwrap();
+    assert_hex::assert_eq_hex!(instance.v[0xF], 0x1);
+    assert_hex::assert_eq_hex!(instance.v[0xA], 0xC9);
+}
