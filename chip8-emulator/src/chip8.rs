@@ -95,20 +95,46 @@ impl Chip8 {
             // Clear dispaly
             (0x0, 0x0, 0xE, 0x0) => return Err(String::from("Not implemented yet")),
             // RET - return from subroutine
-            (0x0, 0x0, 0xE, 0xE) => return Err(String::from("Not implemented yet")),
+            (0x0, 0x0, 0xE, 0xE) => self.op_00ee()?,
             // 1nnn: sets pc to nnn
             (0x1, _, _, _) => self.op_1nnn(nnn),
+            //call - push pc to stack and jump to nnn
+            (0x2, _, _, _) => self.op_2nnn(nnn)?,
             _ => return Err(String::from("Unknown intruction"))
         }
         Ok(())
     }
 
-    // handles the 1nnn opcode
     // sets pc to whatever nnn is
-    pub fn op_1nnn(&mut self, nnn: u16)
+    fn op_1nnn(&mut self, nnn: u16)
     {
         self.pc = nnn;
-        println!("PC: {:#06X}, nnn: {:#05X}", self.pc, nnn);
+    }
+
+    // pushes pc to the stack, and sets pc to nnn and increment sp
+    fn op_2nnn(&mut self, nnn: u16) -> Result<(), String>
+    {
+        println!("Executing 2nnn!");
+        // check if we are not out of frames
+        if self.sp as usize == STACK_SIZE {
+            return Err(String::from("Stack is full"));
+        }
+        self.stack[self.sp as usize] = self.pc; // push
+        self.sp += 1; // increment
+        self.pc = nnn; // jump
+        Ok(())
+    }
+
+    // return from subroutine - pop address on stack to pc 
+    fn op_00ee(&mut self) -> Result<(), String>
+    {
+        if self.sp == 0 {
+            // it shouldn't happened, just in case
+            return Err(String::from("Tried to return to none?"));
+        }
+        self.sp -= 1;
+        self.pc = self.stack[self.sp as usize];
+        Ok(())
     }
 }
 
