@@ -21,3 +21,18 @@ fn op_2nnn() {
     assert_hex::assert_eq_hex!(instance.stack[0], 0x202);
     assert_hex::assert_eq_hex!(instance.sp, 0x1);
 }
+
+#[test]
+fn op_00ee() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x21;
+    instance.memory[0x201] = 0x3F;
+    instance.cycle().unwrap();
+
+    instance.memory[0x013F] = 0x00;
+    instance.memory[0x0140] = 0xEE;
+
+    instance.cycle().unwrap();
+    assert_hex::assert_eq_hex!(instance.pc, 0x0202);
+    assert_hex::assert_eq_hex!(instance.sp, 0x0);
+}
