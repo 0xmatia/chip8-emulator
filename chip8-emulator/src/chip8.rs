@@ -1,4 +1,5 @@
 use std::fs;
+use std::fmt;
 use std::error::Error;
 use std::{thread, time};
 
@@ -26,6 +27,12 @@ pub struct Chip8 {
 
     //STACK pointer
     sp: u8,
+}
+
+impl fmt::Display for Chip8 {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "(PC: {:#06X}, I: {:#06X}, Stack: {:?}, Vs: {:?})", self.pc, self.i, self.stack, self.v)
+    }
 }
 
 impl Chip8 {
@@ -90,6 +97,7 @@ impl Chip8 {
         let x: u8 = ((opcode >> 8) & 0x000F) as u8;
         let y: u8 = ((opcode >> 4) & 0x000F) as u8;
         println!("nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}", nnn, kk, n, x, y);
+        println!("State: {}", self);
 
         match nibbles { 
             // Clear dispaly
