@@ -110,6 +110,8 @@ impl Chip8 {
             (0x2, _, _, _) => self.op_2nnn(nnn)?,
             // skip next intruction if vx == kk
             (0x3, _, _, _) => self.op_3xkk(x, kk),
+            // skip next intruction if vx != kk
+            (0x4, _, _, _) => self.op_4xkk(x, kk),
             _ => return Err(String::from("Unknown intruction"))
         }
         Ok(())
@@ -150,6 +152,15 @@ impl Chip8 {
     fn op_3xkk(&mut self, x: u8, kk: u8)
     {
         if self.v[x as usize] == kk {
+            self.pc += 2; //skip additional 2bytes!
+        }
+        // do nothing else!
+    }
+
+    // compare vx to xx and increment pc by two if they are not equal (+=2);
+    fn op_4xkk(&mut self, x: u8, kk: u8)
+    {
+        if self.v[x as usize] != kk {
             self.pc += 2; //skip additional 2bytes!
         }
         // do nothing else!
