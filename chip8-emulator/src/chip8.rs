@@ -1,6 +1,7 @@
-use std::fs;
-use std::fmt;
 use std::error::Error;
+use std::fmt;
+use std::fs;
+use std::io;
 use std::{thread, time};
 
 const RAM_SIZE: usize = 4096;
@@ -31,7 +32,11 @@ pub struct Chip8 {
 
 impl fmt::Display for Chip8 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "(PC: {:#06X}, I: {:#06X}, Stack: {:?}, Vs: {:?})", self.pc, self.i, self.stack, self.v)
+        write!(
+            f,
+            "(PC: {:#06X}, I: {:#06X}, Stack: {:X?}, Vs: {:X?})",
+            self.pc, self.i, self.stack, self.v
+        )
     }
 }
 
@@ -49,7 +54,7 @@ impl Chip8 {
             sound_timer: 0,
             delay_timer: 0,
             stack: [0; STACK_SIZE],
-            sp: 0
+            sp: 0,
         }
     }
     // This function loads a rom to memory
@@ -57,7 +62,6 @@ impl Chip8 {
         // Read ROM
         let rom_data = fs::read(rom_path)?;
         let mut memory_pointer = 0x200;
-     
         for &byte in rom_data.iter() {
             self.memory[memory_pointer] = byte;
             memory_pointer += 1;
@@ -70,7 +74,6 @@ impl Chip8 {
         for pointer in start_index..RAM_SIZE as u16 {
             println!("{:#X}: {:#04X}", pointer, self.memory[pointer as usize]);
             thread::sleep(time::Duration::from_millis(10));
-            
         }
     }
 
@@ -79,29 +82,39 @@ impl Chip8 {
         let hi = self.memory[self.pc as usize] as u16;
         let lo = self.memory[(self.pc + 1) as usize] as u16;
         let opcode = (hi << 8) | lo;
-        println!("Opcode: {:#06X}", opcode);
-        
-        // increment the program counter
-        self.pc += 2;
-        
         let nibbles = (
             (opcode & 0xF000) >> 12 as u8,
             (opcode & 0x0F00) >> 8 as u8,
             (opcode & 0x00F0) >> 4 as u8,
             (opcode & 0x000F) as u8,
         );
+
         // extract data from the opcode: kk, nnn, n, nn x, y
         let nnn = opcode & 0x0FFF;
         let kk: u8 = (opcode & 0x00FF) as u8; // or nn
         let n: u8 = (opcode & 0x000F) as u8;
         let x: u8 = ((opcode >> 8) & 0x000F) as u8;
         let y: u8 = ((opcode >> 4) & 0x000F) as u8;
-        println!("nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}", nnn, kk, n, x, y);
+        println!("\nOpcode: {:#06X}", opcode);
+        println!(
+            "nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}",
+            nnn, kk, n, x, y
+        );
         println!("State: {}", self);
+        //Wait for input to proceed
+        let mut input = String::from("");
+        io::stdin()
+            .read_line(&mut input)
+            .ok()
+            .expect("Couldn't read line");
+        // increment the program counter
+        self.pc += 0x2;
 
-        match nibbles { 
+        match nibbles {
             // Clear dispaly
-            (0x0, 0x0, 0xE, 0x0) => return Err(String::from("Not implemented yet")),
+            (0x0, 0x0, 0xE, 0x0) => {
+                return Err(format!("Opcode not implemented yet: {:#06X}", opcode))
+            }
             // RET - return from subroutine
             (0x0, 0x0, 0xE, 0xE) => self.op_00ee()?,
             // 1nnn: sets pc to nnn
@@ -112,20 +125,28 @@ impl Chip8 {
             (0x3, _, _, _) => self.op_3xkk(x, kk),
             // skip next intruction if vx != kk
             (0x4, _, _, _) => self.op_4xkk(x, kk),
-            _ => return Err(String::from("Unknown intruction"))
+            // skip next intruction if vx == vy
+            (0x5, _, _, 0x0) => self.op_5xy0(x, y),
+            // sets vx to kk
+            (0x6, _, _, _) => self.op_6xkk(x, kk),
+            // adds kk v[x], store in v[x]
+            (0x7, _, _, _) => self.op_7xkk(x, kk),
+            // sets v[x] = v[y]
+            (0x8, _, _, 0x0) => self.op_8xy0(x, y),
+            // sets v[x] = v[x] | v[y]
+            (0x8, _, _, 0x1) => self.op_8xy1(x, y),
+            _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
     }
 
     // sets pc to whatever nnn is
-    fn op_1nnn(&mut self, nnn: u16)
-    {
+    fn op_1nnn(&mut self, nnn: u16) {
         self.pc = nnn;
     }
 
     // pushes pc to the stack, and sets pc to nnn and increment sp
-    fn op_2nnn(&mut self, nnn: u16) -> Result<(), String>
-    {
+    fn op_2nnn(&mut self, nnn: u16) -> Result<(), String> {
         // check if we are not out of frames
         if self.sp as usize == STACK_SIZE {
             return Err(String::from("Stack is full"));
@@ -136,9 +157,8 @@ impl Chip8 {
         Ok(())
     }
 
-    // return from subroutine - pop address on stack to pc 
-    fn op_00ee(&mut self) -> Result<(), String>
-    {
+    // return from subroutine - pop address on stack to pc
+    fn op_00ee(&mut self) -> Result<(), String> {
         if self.sp == 0 {
             // it shouldn't happened, just in case
             return Err(String::from("Tried to return to none?"));
@@ -149,8 +169,7 @@ impl Chip8 {
     }
 
     // compare vx to xx and increment pc by two if they are equal (+=2);
-    fn op_3xkk(&mut self, x: u8, kk: u8)
-    {
+    fn op_3xkk(&mut self, x: u8, kk: u8) {
         if self.v[x as usize] == kk {
             self.pc += 2; //skip additional 2bytes!
         }
@@ -158,12 +177,39 @@ impl Chip8 {
     }
 
     // compare vx to xx and increment pc by two if they are not equal (+=2);
-    fn op_4xkk(&mut self, x: u8, kk: u8)
-    {
+    fn op_4xkk(&mut self, x: u8, kk: u8) {
         if self.v[x as usize] != kk {
             self.pc += 2; //skip additional 2bytes!
         }
         // do nothing else!
+    }
+
+    // compare vx and vy and increment pc by two if they are equal (+=2);
+    fn op_5xy0(&mut self, x: u8, y: u8) {
+        if self.v[x as usize] == self.v[y as usize] {
+            self.pc += 2; //skip additional 2bytes!
+        }
+        // do nothing else!
+    }
+
+    // set v[x] to kk
+    fn op_6xkk(&mut self, x: u8, kk: u8) {
+        self.v[x as usize] = kk;
+    }
+
+    // add kk to v[x]
+    fn op_7xkk(&mut self, x: u8, kk: u8) {
+        self.v[x as usize] = self.v[x as usize] + kk;
+    }
+
+    // store vy in vx
+    fn op_8xy0(&mut self, x: u8, y: u8) {
+        self.v[x as usize] = self.v[y as usize];
+    }
+
+    // set vx = vx | vy
+    fn op_8xy1(&mut self, x: u8, y: u8) {
+        self.v[x as usize] = self.v[x as usize] | self.v[y as usize];
     }
 }
 

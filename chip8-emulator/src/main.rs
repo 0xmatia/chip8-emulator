@@ -1,7 +1,6 @@
 mod chip8;
 use chip8::Chip8;
 use std::process;
-use std::io;
 
 fn main() {
     println!("CHIP-8 emulator starting...");
@@ -19,10 +18,5 @@ fn main() {
         if let Err(e) = chip8.cycle() {
             eprintln!("Execution error: {}", e)
         }
-        //Wait for input to proceed to the next cycle
-        let mut input = String::from("");
-        io::stdin().read_line(&mut input)
-        .ok()
-        .expect("Couldn't read line");   
     }
 }  
