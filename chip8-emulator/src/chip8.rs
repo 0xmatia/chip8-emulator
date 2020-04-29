@@ -85,10 +85,10 @@ impl Chip8 {
         );
         // extract data from the opcode: kk, nnn, n, nn x, y
         let nnn = opcode & 0x0FFF;
-        let kk = opcode & 0x00FF; // or nn
-        let n = opcode & 0x000F;
-        let x = (opcode >> 8) & 0x000F;
-        let y = (opcode >> 4) & 0x000F;
+        let kk: u8 = (opcode & 0x00FF) as u8; // or nn
+        let n: u8 = (opcode & 0x000F) as u8;
+        let x: u8 = ((opcode >> 8) & 0x000F) as u8;
+        let y: u8 = ((opcode >> 4) & 0x000F) as u8;
         println!("nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}", nnn, kk, n, x, y);
 
         match nibbles { 
@@ -100,6 +100,8 @@ impl Chip8 {
             (0x1, _, _, _) => self.op_1nnn(nnn),
             //call - push pc to stack and jump to nnn
             (0x2, _, _, _) => self.op_2nnn(nnn)?,
+            // skip next intruction if vx == kk
+            (0x3, _, _, _) => self.op_3xkk(x, kk),
             _ => return Err(String::from("Unknown intruction"))
         }
         Ok(())
@@ -114,7 +116,6 @@ impl Chip8 {
     // pushes pc to the stack, and sets pc to nnn and increment sp
     fn op_2nnn(&mut self, nnn: u16) -> Result<(), String>
     {
-        println!("Executing 2nnn!");
         // check if we are not out of frames
         if self.sp as usize == STACK_SIZE {
             return Err(String::from("Stack is full"));
@@ -135,6 +136,15 @@ impl Chip8 {
         self.sp -= 1;
         self.pc = self.stack[self.sp as usize];
         Ok(())
+    }
+
+    // compare vx to xx and increment pc by two if they are equal (+=2);
+    fn op_3xkk(&mut self, x: u8, kk: u8)
+    {
+        if self.v[x as usize] == kk {
+            self.pc += 2; //skip additional 2bytes!
+        }
+        // do nothing else!
     }
 }
 

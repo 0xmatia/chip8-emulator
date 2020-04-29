@@ -36,3 +36,16 @@ fn op_00ee() {
     assert_hex::assert_eq_hex!(instance.pc, 0x0202);
     assert_hex::assert_eq_hex!(instance.sp, 0x0);
 }
+
+
+#[test]
+fn op_3xkk() {
+    let mut instance = Chip8::new();
+    // this means if v2 is equals to 0xA skip to next instruciton 0x204
+    instance.v[2] = 0xA;
+    instance.memory[0x200] = 0x32;
+    instance.memory[0x201] = 0x0A;
+    instance.cycle().unwrap();
+
+    assert_hex::assert_eq_hex!(instance.pc, 0x0204);
+}
