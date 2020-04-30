@@ -141,6 +141,10 @@ impl Chip8 {
             (0x8, _, _, 0x3) => self.op_8xy3(x, y),
             // adds vx and vy
             (0x8, _, _, 0x4) => self.op_8xy4(x, y),
+            // subbstructs vy from vx
+            (0x8, _, _, 0x5) => self.op_8xy5(x, y),
+            // shift right
+            (0x8, _, _, 0x6) => self.op_8xy6(x, y),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
@@ -239,6 +243,29 @@ impl Chip8 {
         } else {
             self.v[0xF] = 0x0;
         }
+    }
+
+    // substructs vy from vx. if vx > vy vf is set to one.
+    fn op_8xy5(&mut self, x: u8, y: u8) {
+        if self.v[x as usize] > self.v[y as usize] {
+            self.v[0xF] = 0x1;
+        }
+        else {
+            self.v[0xF] = 0x0;
+        }
+        self.v[x as usize] -= self.v[y as usize];
+    }
+
+    // shift right. if lsb of vx is 1, carry flag is turned on
+    fn op_8xy6(&mut self, x: u8, _y: u8) {
+        let lsb = self.v[x as usize] & 0x1; // extract the lsb
+        if lsb == 0x1 {
+            self.v[0xF] = 0x1;
+        }
+        else {
+            self.v[0xF] = 0x0;
+        }
+        self.v[x as usize] >>= 1;
     }
 }
 
