@@ -269,3 +269,45 @@ fn op_8xye() {
     assert_hex::assert_eq_hex!(instance.v[0xF], 0x1);
     assert_hex::assert_eq_hex!(instance.v[0xA], 0xFE);
 }
+
+#[test]
+fn op_9xy0() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x6A;
+    instance.memory[0x201] = 0xFF;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0x6B;
+    instance.memory[0x203] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x204] = 0x9A;
+    instance.memory[0x205] = 0xB0;
+    instance.cycle().unwrap();
+    assert_hex::assert_eq_hex!(instance.pc, 0x208);
+}
+
+#[test]
+fn op_annn() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0xAA;
+    instance.memory[0x201] = 0xFF;
+    instance.cycle().unwrap();
+
+    assert_hex::assert_eq_hex!(instance.i, 0xAFF);
+    assert_hex::assert_eq_hex!(instance.pc, 0x202);
+}
+
+#[test]
+fn op_bnnn() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x60;
+    instance.memory[0x201] = 0x3A;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0xBA;
+    instance.memory[0x203] = 0x37;
+    instance.cycle().unwrap();
+
+    assert_hex::assert_eq_hex!(instance.pc, 0x3A + 0xA37);
+}

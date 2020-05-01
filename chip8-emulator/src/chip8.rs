@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::error::Error;
 use std::fmt;
 use std::fs;
@@ -9,6 +10,25 @@ const NUM_REGISTERS: usize = 16;
 const STACK_SIZE: usize = 16;
 const WIDTH: usize = 64;
 const HEIGHT: usize = 32;
+
+const CHIP8_FONTS: [u8; 80] = [
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // F
+];
 
 pub struct Chip8 {
     // Memory: 4kb of 8 bits(byte)
@@ -33,6 +53,9 @@ pub struct Chip8 {
 
     //STACK pointer
     sp: u8,
+
+    // random number handler
+    rng: rand::rngs::ThreadRng,
 }
 
 impl fmt::Display for Chip8 {
@@ -48,9 +71,14 @@ impl fmt::Display for Chip8 {
 impl Chip8 {
     // This function creates a new instance of the chip struct
     pub fn new() -> Chip8 {
+        let mut ram = [0u8; RAM_SIZE];
+        for i in 0..CHIP8_FONTS.len() {
+            ram[i] = CHIP8_FONTS[i];
+        }
+
         Chip8 {
             // FIll memory with zeros
-            memory: [0; RAM_SIZE],
+            memory: ram,
             // execution starts at 0x200
             pc: 0x200,
             // FILL registers with 0
@@ -62,6 +90,7 @@ impl Chip8 {
             delay_timer: 0,
             stack: [0; STACK_SIZE],
             sp: 0,
+            rng: rand::thread_rng(),
         }
     }
     // This function loads a rom to memory
@@ -109,7 +138,7 @@ impl Chip8 {
         );
         println!("State: {}", self);
         //Wait for input to proceed
-        // let mut input = String::from("");
+        let mut input = String::from("");
         // io::stdin()
         //     .read_line(&mut input)
         //     .ok()
@@ -117,9 +146,7 @@ impl Chip8 {
 
         match nibbles {
             // Clear dispaly
-            (0x0, 0x0, 0xE, 0x0) => {
-                return Err(format!("Opcode not implemented yet: {:#06X}", opcode))
-            }
+            (0x0, 0x0, 0xE, 0x0) => self.op_00e0(),
             // RET - return from subroutine
             (0x0, 0x0, 0xE, 0xE) => self.op_00ee()?,
             // 1nnn: sets pc to nnn
@@ -154,9 +181,25 @@ impl Chip8 {
             (0x8, _, _, 0x7) => self.op_8xy7(x, y),
             // left shift (multiply by two)
             (0x8, _, _, 0xE) => self.op_8xye(x, y),
+            // skip next instruction if vx!=vy
+            (0x9, _, _, 0x0) => self.op_9xy0(x, y),
+            // set I to nnn
+            (0xA, _, _, _) => self.op_annn(nnn),
+            // set B to nnn + v0
+            (0xB, _, _, _) => self.op_bnnn(nnn),
+            // generate random number
+            (0xC, _, _, _) => self.op_cxkk(x, kk),
+            // draw to screen
+            (0xD, _, _, _) => self.op_dxyn(x, y, n),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
+    }
+
+    // clear display
+    fn op_00e0(&mut self) {
+        for elem in self.display.iter_mut() { *elem = 0; }
+        self.pc += 2;
     }
 
     // sets pc to whatever nnn is
@@ -314,6 +357,55 @@ impl Chip8 {
         self.v[x as usize] <<= 1;
         // increment the program counter
         self.pc += 0x2;
+    }
+
+    // if the two registers aren't equal, skip the next instruction
+    fn op_9xy0(&mut self, x: u8, y: u8) {
+        if self.v[x as usize] != self.v[y as usize] {
+            self.pc += 4; //skip additional 2bytes!
+        } else {
+            // increment the program counter
+            self.pc += 0x2;
+        }
+    }
+
+    // set i = nnn
+    fn op_annn(&mut self, nnn: u16) {
+        self.i = nnn;
+        self.pc += 2;
+    }
+
+    // set pc = nnn + v0
+    fn op_bnnn(&mut self, nnn: u16) {
+        self.pc = nnn + (self.v[0x0] as u16);
+    }
+
+    // set vx = random number & kk
+    fn op_cxkk(&mut self, x: u8, kk: u8) {
+        let random_number: u16 = self.rng.gen_range(0, 256);
+        self.v[x as usize] = random_number as u8 & kk;
+        self.pc += 2;
+    }
+
+    fn op_dxyn(&mut self, x: u8, y: u8, n: u8) {
+        let mut pixel: u8;
+        self.v[0xF] = 0;
+        for yline in 0..n {
+            pixel = self.memory[self.i as usize + yline as usize];
+            for xline in 0..8 {
+                if (pixel & (0x80 >> xline)) != 0 {
+                    print!("*");
+                    if self.display[(x + xline + ((y + yline) * 64)) as usize] == 1 {
+                        self.v[0xF] = 1;
+                    }
+                    self.display[(x + xline + ((y + yline) * 64)) as usize] ^= 1;
+                }
+                print!("_");
+            }
+            println!("\n");
+        }
+        println!("\n");
+        self.pc += 2;
     }
 }
 

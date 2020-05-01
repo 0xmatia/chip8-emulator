@@ -50,14 +50,16 @@ General:
         ☐ Implement opcodes: @started(20-04-28 14:33)
             There are about 35 opcodes which I need to implement 
         ☐ Hanlde timers
-        ☐ add keyboard array
+        ✔ add keyboard array @done(20-05-01 17:25)
         ☐ Print to screen - I will start with just printing to console
-    ☐ Implement (?) the fmt::debug in order to print the chip8 status
+    ✔ Implement (?) the fmt::debug in order to print the chip8 status @done(20-05-01 17:25)
 
 
 
 Todo:
     These are research stuff. I don't know exactly how these work
     ☐ Research about chip-8 display
+        For now I will use someone else's algorithem for debug. Then I will try to understand
+        how things word, I can't seem to figure it out
     ☐ Research about chip-8 keyboard
     ☐ Research about timers

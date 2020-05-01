@@ -1,6 +1,7 @@
 mod chip8;
 use chip8::Chip8;
 use std::process;
+use std::{thread, time};
 
 fn main() {
     println!("CHIP-8 emulator starting...");
@@ -18,5 +19,7 @@ fn main() {
         if let Err(e) = chip8.cycle() {
             eprintln!("Execution error: {}", e)
         }
+        let ten_millis = time::Duration::from_millis(50);
+        thread::sleep(ten_millis);
     }
 }  
