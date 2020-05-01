@@ -7,6 +7,8 @@ use std::{thread, time};
 const RAM_SIZE: usize = 4096;
 const NUM_REGISTERS: usize = 16;
 const STACK_SIZE: usize = 16;
+const WIDTH: usize = 64;
+const HEIGHT: usize = 32;
 
 pub struct Chip8 {
     // Memory: 4kb of 8 bits(byte)
@@ -21,7 +23,10 @@ pub struct Chip8 {
     sound_timer: u16,
 
     delay_timer: u16,
-    // Display + keyboard: tbc
+    // Display 
+    display: [u8; WIDTH * HEIGHT],
+
+    keyboard: [bool; 16],
 
     // STACK
     stack: [u16; STACK_SIZE],
@@ -51,6 +56,8 @@ impl Chip8 {
             // FILL registers with 0
             v: [0; NUM_REGISTERS],
             i: 0x0,
+            display: [0; WIDTH * HEIGHT],
+            keyboard: [false; 16], 
             sound_timer: 0,
             delay_timer: 0,
             stack: [0; STACK_SIZE],
@@ -145,6 +152,8 @@ impl Chip8 {
             (0x8, _, _, 0x5) => self.op_8xy5(x, y),
             // shift right
             (0x8, _, _, 0x6) => self.op_8xy6(x, y),
+            // substrcut vy from vx store in vx
+            (0x8, _, _, 0x7) => self.op_8xy7(x, y),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
@@ -266,6 +275,17 @@ impl Chip8 {
             self.v[0xF] = 0x0;
         }
         self.v[x as usize] >>= 1;
+    }
+
+    // substract. if vy > vx vf is set to one.
+    fn op_8xy7(&mut self, x: u8, y: u8) {
+        if self.v[y as usize] > self.v[x as usize] {
+            self.v[0xF] = 0x1;
+        }
+        else {
+            self.v[0xF] = 0x0;
+        }
+        self.v[x as usize] = self.v[y as usize] - self.v[x as usize];
     }
 }
 
