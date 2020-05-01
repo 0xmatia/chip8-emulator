@@ -251,3 +251,21 @@ fn op_8xy7() {
     assert_hex::assert_eq_hex!(instance.v[0xF], 0x1);
     assert_hex::assert_eq_hex!(instance.v[0xA], 0x30);
 }
+
+#[test]
+fn op_8xye() {
+    let mut instance = Chip8::new();
+    instance.memory[0x200] = 0x6A;
+    instance.memory[0x201] = 0xFF;
+    instance.cycle().unwrap();
+
+    instance.memory[0x202] = 0x6B;
+    instance.memory[0x203] = 0xCA;
+    instance.cycle().unwrap();
+
+    instance.memory[0x204] = 0x8A;
+    instance.memory[0x205] = 0xBE;
+    instance.cycle().unwrap();
+    assert_hex::assert_eq_hex!(instance.v[0xF], 0x1);
+    assert_hex::assert_eq_hex!(instance.v[0xA], 0xFE);
+}

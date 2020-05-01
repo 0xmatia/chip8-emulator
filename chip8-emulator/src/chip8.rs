@@ -23,7 +23,7 @@ pub struct Chip8 {
     sound_timer: u16,
 
     delay_timer: u16,
-    // Display 
+    // Display
     display: [u8; WIDTH * HEIGHT],
 
     keyboard: [bool; 16],
@@ -57,7 +57,7 @@ impl Chip8 {
             v: [0; NUM_REGISTERS],
             i: 0x0,
             display: [0; WIDTH * HEIGHT],
-            keyboard: [false; 16], 
+            keyboard: [false; 16],
             sound_timer: 0,
             delay_timer: 0,
             stack: [0; STACK_SIZE],
@@ -109,13 +109,11 @@ impl Chip8 {
         );
         println!("State: {}", self);
         //Wait for input to proceed
-        let mut input = String::from("");
-        io::stdin()
-            .read_line(&mut input)
-            .ok()
-            .expect("Couldn't read line");
-        // increment the program counter
-        self.pc += 0x2;
+        // let mut input = String::from("");
+        // io::stdin()
+        //     .read_line(&mut input)
+        //     .ok()
+        //     .expect("Couldn't read line");
 
         match nibbles {
             // Clear dispaly
@@ -154,6 +152,8 @@ impl Chip8 {
             (0x8, _, _, 0x6) => self.op_8xy6(x, y),
             // substrcut vy from vx store in vx
             (0x8, _, _, 0x7) => self.op_8xy7(x, y),
+            // left shift (multiply by two)
+            (0x8, _, _, 0xE) => self.op_8xye(x, y),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
@@ -170,7 +170,7 @@ impl Chip8 {
         if self.sp as usize == STACK_SIZE {
             return Err(String::from("Stack is full"));
         }
-        self.stack[self.sp as usize] = self.pc; // push
+        self.stack[self.sp as usize] = self.pc + 2; // push the next instruction
         self.sp += 1; // increment
         self.pc = nnn; // jump
         Ok(())
@@ -190,55 +190,73 @@ impl Chip8 {
     // compare vx to xx and increment pc by two if they are equal (+=2);
     fn op_3xkk(&mut self, x: u8, kk: u8) {
         if self.v[x as usize] == kk {
-            self.pc += 2; //skip additional 2bytes!
+            self.pc += 0x4; //skip additional 2bytes!
+        } else {
+            // increment the program counter
+            self.pc += 0x2;
         }
-        // do nothing else!
     }
 
     // compare vx to xx and increment pc by two if they are not equal (+=2);
     fn op_4xkk(&mut self, x: u8, kk: u8) {
         if self.v[x as usize] != kk {
-            self.pc += 2; //skip additional 2bytes!
+            self.pc += 4; //skip additional 2bytes!
+        } else {
+            // increment the program counter
+            self.pc += 0x2;
         }
-        // do nothing else!
     }
 
     // compare vx and vy and increment pc by two if they are equal (+=2);
     fn op_5xy0(&mut self, x: u8, y: u8) {
         if self.v[x as usize] == self.v[y as usize] {
-            self.pc += 2; //skip additional 2bytes!
+            self.pc += 4; //skip additional 2bytes!
+        } else {
+            // increment the program counter
+            self.pc += 0x2;
         }
-        // do nothing else!
     }
 
     // set v[x] to kk
     fn op_6xkk(&mut self, x: u8, kk: u8) {
         self.v[x as usize] = kk;
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // add kk to v[x]
     fn op_7xkk(&mut self, x: u8, kk: u8) {
         self.v[x as usize] = self.v[x as usize] + kk;
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // store vy in vx
     fn op_8xy0(&mut self, x: u8, y: u8) {
         self.v[x as usize] = self.v[y as usize];
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // set vx = vx | vy
     fn op_8xy1(&mut self, x: u8, y: u8) {
         self.v[x as usize] = self.v[x as usize] | self.v[y as usize];
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // set vx = vx & vy
     fn op_8xy2(&mut self, x: u8, y: u8) {
         self.v[x as usize] = self.v[x as usize] & self.v[y as usize];
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // set vx = vx & vy
     fn op_8xy3(&mut self, x: u8, y: u8) {
         self.v[x as usize] = self.v[x as usize] ^ self.v[y as usize];
+        // increment the program counter
+        self.pc += 0x2;
     }
     // adds vx and vy; turns on carry flag if necessery;
     fn op_8xy4(&mut self, x: u8, y: u8) {
@@ -252,40 +270,50 @@ impl Chip8 {
         } else {
             self.v[0xF] = 0x0;
         }
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // substructs vy from vx. if vx > vy vf is set to one.
     fn op_8xy5(&mut self, x: u8, y: u8) {
         if self.v[x as usize] > self.v[y as usize] {
             self.v[0xF] = 0x1;
-        }
-        else {
+        } else {
             self.v[0xF] = 0x0;
         }
         self.v[x as usize] -= self.v[y as usize];
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // shift right. if lsb of vx is 1, carry flag is turned on
     fn op_8xy6(&mut self, x: u8, _y: u8) {
         let lsb = self.v[x as usize] & 0x1; // extract the lsb
-        if lsb == 0x1 {
-            self.v[0xF] = 0x1;
-        }
-        else {
-            self.v[0xF] = 0x0;
-        }
+        self.v[0xf] = lsb;
         self.v[x as usize] >>= 1;
+        // increment the program counter
+        self.pc += 0x2;
     }
 
     // substract. if vy > vx vf is set to one.
     fn op_8xy7(&mut self, x: u8, y: u8) {
         if self.v[y as usize] > self.v[x as usize] {
             self.v[0xF] = 0x1;
-        }
-        else {
+        } else {
             self.v[0xF] = 0x0;
         }
         self.v[x as usize] = self.v[y as usize] - self.v[x as usize];
+        // increment the program counter
+        self.pc += 0x2;
+    }
+
+    // shift right. if msb of vx is 1, carry flag is turned on
+    fn op_8xye(&mut self, x: u8, _y: u8) {
+        let msb = (self.v[x as usize] >> 7) & 0x1; // extract the msb
+        self.v[0xf] = msb;
+        self.v[x as usize] <<= 1;
+        // increment the program counter
+        self.pc += 0x2;
     }
 }
 
