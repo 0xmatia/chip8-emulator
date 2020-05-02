@@ -429,6 +429,8 @@ impl Chip8 {
     fn op_dxyn(&mut self, x: u8, y: u8, n: u8) {
         let mut pixel: u8;
         self.v[0xF] = 0;
+        let x = self.v[x as usize];
+        let y = self.v[y as usize];
         for yline in 0..n {
             pixel = self.memory[self.i as usize + yline as usize];
             for xline in 0..8 {
