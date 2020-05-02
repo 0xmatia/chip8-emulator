@@ -44,7 +44,7 @@ General:
         I can now load a rom to RAM (at 0x200). In addition to that, I wrote a function thats print
         the memory starting from specified location. This way I can verify the memory looks as 
         it should be.
-    ☐ Create a basic games loop
+    ✔ Create a basic games loop @done(20-05-02 23:31)
         ✔ Decode an opcode @started(20-04-28 12:52) @done(20-04-28 14:05) @lasted(1h13m58s)
         ✔ Extract from it the 4 nibbles + kk, nnn, n, x, y. @started(20-04-28 14:06) @done(20-04-28 14:32) @lasted(26m10s)
         ✔ Implement opcodes: @started(20-04-28 14:33) @done(20-05-02 18:57) @lasted(4d4h24m22s)
@@ -52,7 +52,7 @@ General:
             I finished the opcodes, none are tested with a game
         ✔ Hanlde timers @started(20-05-02 18:59) @done(20-05-02 19:08) @lasted(9m2s)
         ✔ add keyboard array @done(20-05-01 17:25)
-        ☐ Print to screen - I will start with just printing to console
+        ✔ Print to screen - I will start with just printing to console @done(20-05-02 23:31)
     ✔ Implement (?) the fmt::debug in order to print the chip8 status @done(20-05-01 17:25)
 
 
@@ -61,6 +61,19 @@ Todo:
     These are research stuff. I don't know exactly how these work
     ☐ Research about chip-8 display
         For now I will use someone else's algorithem for debug. Then I will try to understand
-        how things word, I can't seem to figure it out
+        how things word, I can't seem to figure it out.
+        I figured how the algorithem works. First, I needed a refresher on two dimentional arrays 
+        (and now the screen is a two dimentional array). We start by going through the height: 0-n.
+        Then, we can extract the first of eight bytes the represent a sprite (each sprite is 8x0-15).
+        We do so using the I pointer + y index (first byte is i + 0, tehn i + 1 and so on.). Then 
+        we go 0..8: for each BIT in the byte. then using and and right shift with the hex number 0x80
+        we determine if the byte we're checking (start from msb->lsb) is on. If it is on, we proceed.
+        If no, we continue to the next iteration.
+        After we determined the byte is on, we check to see if the display at x,y is on
+        (pay attention - we use [y][x] because 2d arrays). If it is on, vf is turned on. Then we xor
+        the value at x,y with 1.
+        How to print to screen:
+            Simply by drawing a white rectangle which is 20x20, and nothing where there is a zero.
+            the for loop will 0..1280, jumps of 20 (0..640 jumps of 20)
     ☐ Research about chip-8 keyboard
     ✔ Research about timers @done(20-05-02 18:57)

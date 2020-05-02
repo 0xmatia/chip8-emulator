@@ -10,7 +10,7 @@ fn main() {
     // create chip8 instance
     let mut chip8 = Chip8::new();
 
-    if let Err(e) = chip8.load_rom("Roms\\PONG2") {
+    if let Err(e) = chip8.load_rom("Roms\\BRIX") {
         eprintln!("Couldn't load ROM: {}", e);
 
         process::exit(1);

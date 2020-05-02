@@ -440,9 +440,6 @@ impl Chip8 {
                 if (pixel & (0x80 >> xline)) != 0 {
                     // determine for each byte if it is on
                     // detect coliision
-                    let index =
-                        x as usize + xline as usize + ((y as usize + yline as usize) * WIDTH);
-
                     let x_cord: usize = (x + xline) as usize;
                     let y_cord: usize = (y + yline) as usize;
                     if self.display[y_cord][x_cord] == 1 {
