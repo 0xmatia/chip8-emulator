@@ -430,14 +430,20 @@ impl Chip8 {
         for yline in 0..n {
             pixel = self.memory[self.i as usize + yline as usize];
             for xline in 0..8 {
+                // sprites are 8 pixel tall
                 if (pixel & (0x80 >> xline)) != 0 {
+                    // determine for each byte if it is on
                     print!("*");
-                    if self.display[(x + xline + ((y + yline) * 64)) as usize] == 1 {
+                    // detect coliision
+                    let index =
+                        x as usize + xline as usize + ((y as usize + yline as usize) * WIDTH);
+                    if self.display[index] == 1 {
                         self.v[0xF] = 1;
                     }
-                    self.display[(x + xline + ((y + yline) * 64)) as usize] ^= 1;
+                    self.display[index] ^= 1;
+                } else {
+                    print!("_");
                 }
-                print!("_");
             }
             println!("\n");
         }

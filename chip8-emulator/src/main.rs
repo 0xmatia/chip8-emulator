@@ -8,7 +8,7 @@ fn main() {
     // create chip8 instance
     let mut chip8 = Chip8::new();
 
-    if let Err(e) = chip8.load_rom("Roms\\GUESS") {
+    if let Err(e) = chip8.load_rom("Roms\\INVADERS") {
         eprintln!("Couldn't load ROM: {}", e);
 
         process::exit(1);
@@ -22,7 +22,7 @@ fn main() {
         if chip8.sound_timer > 0 {
             println!("BEEP!");
         }
-        let ten_millis = time::Duration::from_millis(50);
+        let ten_millis = time::Duration::from_millis(100);
         thread::sleep(ten_millis);
     }
 }  
