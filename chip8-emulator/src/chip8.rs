@@ -41,7 +41,7 @@ pub struct Chip8 {
     // I register: 16 bit memory holder
     i: u16,
     //Two timers, they are not implemented yet.
-    sound_timer: u8,
+    pub sound_timer: u8,
 
     delay_timer: u8,
     // Display
@@ -217,7 +217,18 @@ impl Chip8 {
             (0xF, _, 0x6, 0x5) => self.op_fx65(x),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
+
+        self.handle_timers();
         Ok(())
+    }
+
+    fn handle_timers(&mut self) {
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1
+        }
+        if self.sound_timer > 0 {
+            self.sound_timer -= 1;
+        }
     }
 
     // clear display

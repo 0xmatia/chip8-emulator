@@ -19,6 +19,9 @@ fn main() {
         if let Err(e) = chip8.cycle() {
             eprintln!("Execution error: {}", e)
         }
+        if chip8.sound_timer > 0 {
+            println!("BEEP!");
+        }
         let ten_millis = time::Duration::from_millis(50);
         thread::sleep(ten_millis);
     }

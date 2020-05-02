@@ -50,7 +50,7 @@ General:
         ✔ Implement opcodes: @started(20-04-28 14:33) @done(20-05-02 18:57) @lasted(4d4h24m22s)
             There are about 35 opcodes which I need to implement 
             I finished the opcodes, none are tested with a game
-        ☐ Hanlde timers
+        ✔ Hanlde timers @started(20-05-02 18:59) @done(20-05-02 19:08) @lasted(9m2s)
         ✔ add keyboard array @done(20-05-01 17:25)
         ☐ Print to screen - I will start with just printing to console
     ✔ Implement (?) the fmt::debug in order to print the chip8 status @done(20-05-01 17:25)
