@@ -9,8 +9,8 @@ use std::{thread, time};
 const RAM_SIZE: usize = 4096;
 const NUM_REGISTERS: usize = 16;
 const STACK_SIZE: usize = 16;
-const WIDTH: usize = 64;
-const HEIGHT: usize = 32;
+pub const WIDTH: usize = 64;
+pub const HEIGHT: usize = 32;
 
 const CHIP8_FONTS: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -45,7 +45,7 @@ pub struct Chip8 {
 
     delay_timer: u8,
     // Display
-    display: [u8; WIDTH * HEIGHT],
+    pub display: [u8; WIDTH * HEIGHT],
 
     keyboard: [bool; 16],
 
@@ -57,6 +57,7 @@ pub struct Chip8 {
 
     // random number handler
     rng: rand::rngs::ThreadRng,
+    pub draw: bool
 }
 
 impl fmt::Display for Chip8 {
@@ -92,6 +93,7 @@ impl Chip8 {
             stack: [0; STACK_SIZE],
             sp: 0,
             rng: rand::thread_rng(),
+            draw: false
         }
     }
     // This function loads a rom to memory
@@ -433,7 +435,6 @@ impl Chip8 {
                 // sprites are 8 pixel tall
                 if (pixel & (0x80 >> xline)) != 0 {
                     // determine for each byte if it is on
-                    print!("*");
                     // detect coliision
                     let index =
                         x as usize + xline as usize + ((y as usize + yline as usize) * WIDTH);
@@ -442,13 +443,11 @@ impl Chip8 {
                     }
                     self.display[index] ^= 1;
                 } else {
-                    print!("_");
                 }
             }
-            println!("\n");
         }
-        println!("\n");
         self.pc += 2;
+        self.draw = true;
     }
 
     // skip next instruction if keyboard at x is pressed

@@ -1,7 +1,9 @@
 mod chip8;
-use chip8::Chip8;
+use chip8::{Chip8, WIDTH, HEIGHT};
 use std::process;
 use std::{thread, time};
+use std::io;
+
 
 fn main() {
     println!("CHIP-8 emulator starting...");
@@ -22,7 +24,28 @@ fn main() {
         if chip8.sound_timer > 0 {
             println!("BEEP!");
         }
-        let ten_millis = time::Duration::from_millis(100);
-        thread::sleep(ten_millis);
+        if chip8.draw {
+            for yline in 0..HEIGHT {
+                for xline in 0..WIDTH {
+                    let pixel = chip8.display[xline + (yline * WIDTH)];
+                    if pixel == 1 {
+                        print!("*");
+                    }
+                    else {
+                        print!("-");
+                    }
+                }
+                println!();
+            }
+            chip8.draw = false;
+            //Wait for input to proceed
+            let mut input = String::from("");
+            io::stdin()
+                .read_line(&mut input)
+                .ok()
+                .expect("Couldn't read line");
+            // let ten_millis = time::Duration::from_millis(100);
+            // thread::sleep(ten_millis);
+        }
     }
 }  
