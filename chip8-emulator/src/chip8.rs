@@ -2,6 +2,7 @@ use rand::Rng;
 use std::error::Error;
 use std::fmt;
 use std::fs;
+#[allow(unused)]
 use std::io;
 use std::{thread, time};
 
@@ -40,9 +41,9 @@ pub struct Chip8 {
     // I register: 16 bit memory holder
     i: u16,
     //Two timers, they are not implemented yet.
-    sound_timer: u16,
+    sound_timer: u8,
 
-    delay_timer: u16,
+    delay_timer: u8,
     // Display
     display: [u8; WIDTH * HEIGHT],
 
@@ -106,6 +107,7 @@ impl Chip8 {
     }
 
     //For debuging, this function will print memory from the requested location
+    #[allow(dead_code)]
     pub fn print_memory(&mut self, start_index: u16) {
         for pointer in start_index..RAM_SIZE as u16 {
             println!("{:#X}: {:#04X}", pointer, self.memory[pointer as usize]);
@@ -138,7 +140,7 @@ impl Chip8 {
         );
         println!("State: {}", self);
         //Wait for input to proceed
-        let mut input = String::from("");
+        //let mut input = String::from("");
         // io::stdin()
         //     .read_line(&mut input)
         //     .ok()
@@ -191,6 +193,28 @@ impl Chip8 {
             (0xC, _, _, _) => self.op_cxkk(x, kk),
             // draw to screen
             (0xD, _, _, _) => self.op_dxyn(x, y, n),
+            // skip next instruction if keyboard[x] is pressed
+            (0xE, _, 0x9, 0xE) => self.op_ex9e(x),
+            // skip next instruction if keyboard[x] is not pressed
+            (0xE, _, 0xA, 0x1) => self.op_exa1(x),
+            // vx = delay timer
+            (0xF, _, 0x0, 0x7) => self.op_fx07(x),
+            // wait for keypress, store result in vx
+            (0xF, _, 0x0, 0xA) => self.op_fx0a(x),
+            // set dt=vx
+            (0xF, _, 0x1, 0x5) => self.op_fx15(x),
+            // set dt = vx
+            (0xF, _, 0x1, 0x8) => self.op_fx18(x),
+            // i = i + vx
+            (0xF, _, 0x1, 0xE) => self.op_fx1e(x),
+            // Set I = location of sprite for digit Vx.
+            (0xF, _, 0x2, 0x9) => self.op_fx29(x),
+            // SStore BCD representation of Vx in memory locations I, I+1, and I+2.
+            (0xF, _, 0x3, 0x3) => self.op_fx33(x),
+            // Store registers V0 through Vx in memory starting at location I.
+            (0xF, _, 0x5, 0x5) => self.op_fx55(x),
+            // Read registers V0 through Vx from memory starting at location I.
+            (0xF, _, 0x6, 0x5) => self.op_fx65(x),
             _ => return Err(format!("Unknown intruction: {:#06X}", opcode)),
         }
         Ok(())
@@ -198,7 +222,9 @@ impl Chip8 {
 
     // clear display
     fn op_00e0(&mut self) {
-        for elem in self.display.iter_mut() { *elem = 0; }
+        for elem in self.display.iter_mut() {
+            *elem = 0;
+        }
         self.pc += 2;
     }
 
@@ -405,6 +431,93 @@ impl Chip8 {
             println!("\n");
         }
         println!("\n");
+        self.pc += 2;
+    }
+
+    // skip next instruction if keyboard at x is pressed
+    fn op_ex9e(&mut self, x: u8) {
+        if self.keyboard[x as usize] {
+            self.pc += 4;
+        } else {
+            self.pc += 2;
+        }
+    }
+
+    // skip next instruction if keyboard at x is not pressed
+    fn op_exa1(&mut self, x: u8) {
+        if !self.keyboard[x as usize] {
+            self.pc += 4;
+        } else {
+            self.pc += 2;
+        }
+    }
+
+    // set vx to delay timer value
+    fn op_fx07(&mut self, x: u8) {
+        self.v[x as usize] = self.delay_timer;
+        self.pc += 2;
+    }
+
+    // wait for keypress, store result is vx
+    fn op_fx0a(&mut self, x: u8) {
+        for i in 0x0..0x10 {
+            if self.keyboard[i] {
+                self.v[x as usize] = i as u8;
+                self.pc += 2;
+            }
+        }
+    }
+
+    // set delay timer to vx
+    fn op_fx15(&mut self, x: u8) {
+        self.delay_timer = self.v[x as usize];
+        self.pc += 2;
+    }
+
+    // set delay timer to vx
+    fn op_fx18(&mut self, x: u8) {
+        self.sound_timer = self.v[x as usize];
+        self.pc += 2;
+    }
+
+    // i + vx are added, stored in i
+    fn op_fx1e(&mut self, x: u8) {
+        self.i += self.v[x as usize] as u16;
+        self.pc += 2;
+    }
+
+    // Set I = location of sprite for digit Vx.
+    fn op_fx29(&mut self, x: u8) {
+        self.i = (self.v[x as usize] * 5) as u16;
+        self.pc += 2;
+    }
+
+    // Store BCD representation of Vx in memory locations I, I+1, and I+2.
+    fn op_fx33(&mut self, x: u8) {
+        let value = self.v[x as usize];
+        self.memory[self.i as usize] = value / 100;
+        self.memory[(self.i + 1) as usize] = (value / 10) % 10;
+        self.memory[(self.i + 2) as usize] = value % 10;
+        self.pc += 2;
+    }
+
+    // Store registers V0 through Vx in memory starting at location I.
+    fn op_fx55(&mut self, x: u8) {
+        let mut pointer: usize = self.i as usize;
+        for register in 0x0..x + 1 {
+            self.memory[pointer] = self.v[register as usize];
+            pointer += 1;
+        }
+        self.pc += 2;
+    }
+
+    // Read registers V0 through Vx from memory starting at location I.
+    fn op_fx65(&mut self, x: u8) {
+        let mut pointer: usize = self.i as usize;
+        for register in 0x0..x + 1 {
+            self.v[register as usize] = self.memory[pointer];
+            pointer += 1;
+        }
         self.pc += 2;
     }
 }

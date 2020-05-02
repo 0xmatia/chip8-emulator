@@ -47,8 +47,9 @@ General:
     ☐ Create a basic games loop
         ✔ Decode an opcode @started(20-04-28 12:52) @done(20-04-28 14:05) @lasted(1h13m58s)
         ✔ Extract from it the 4 nibbles + kk, nnn, n, x, y. @started(20-04-28 14:06) @done(20-04-28 14:32) @lasted(26m10s)
-        ☐ Implement opcodes: @started(20-04-28 14:33)
+        ✔ Implement opcodes: @started(20-04-28 14:33) @done(20-05-02 18:57) @lasted(4d4h24m22s)
             There are about 35 opcodes which I need to implement 
+            I finished the opcodes, none are tested with a game
         ☐ Hanlde timers
         ✔ add keyboard array @done(20-05-01 17:25)
         ☐ Print to screen - I will start with just printing to console
@@ -62,4 +63,4 @@ Todo:
         For now I will use someone else's algorithem for debug. Then I will try to understand
         how things word, I can't seem to figure it out
     ☐ Research about chip-8 keyboard
-    ☐ Research about timers
+    ✔ Research about timers @done(20-05-02 18:57)
