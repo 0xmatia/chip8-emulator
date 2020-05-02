@@ -10,7 +10,7 @@ fn main() {
     // create chip8 instance
     let mut chip8 = Chip8::new();
 
-    if let Err(e) = chip8.load_rom("Roms\\INVADERS") {
+    if let Err(e) = chip8.load_rom("Roms\\PONG2") {
         eprintln!("Couldn't load ROM: {}", e);
 
         process::exit(1);
@@ -27,7 +27,7 @@ fn main() {
         if chip8.draw {
             for yline in 0..HEIGHT {
                 for xline in 0..WIDTH {
-                    let pixel = chip8.display[xline + (yline * WIDTH)];
+                    let pixel = chip8.display[yline][xline];
                     if pixel == 1 {
                         print!("*");
                     }

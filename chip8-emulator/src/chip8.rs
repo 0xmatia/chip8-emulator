@@ -45,7 +45,7 @@ pub struct Chip8 {
 
     delay_timer: u8,
     // Display
-    pub display: [u8; WIDTH * HEIGHT],
+    pub display: [[u8; WIDTH]; HEIGHT],
 
     keyboard: [bool; 16],
 
@@ -57,7 +57,7 @@ pub struct Chip8 {
 
     // random number handler
     rng: rand::rngs::ThreadRng,
-    pub draw: bool
+    pub draw: bool,
 }
 
 impl fmt::Display for Chip8 {
@@ -86,14 +86,14 @@ impl Chip8 {
             // FILL registers with 0
             v: [0; NUM_REGISTERS],
             i: 0x0,
-            display: [0; WIDTH * HEIGHT],
+            display: [[0; WIDTH]; HEIGHT],
             keyboard: [false; 16],
             sound_timer: 0,
             delay_timer: 0,
             stack: [0; STACK_SIZE],
             sp: 0,
             rng: rand::thread_rng(),
-            draw: false
+            draw: false,
         }
     }
     // This function loads a rom to memory
@@ -235,8 +235,10 @@ impl Chip8 {
 
     // clear display
     fn op_00e0(&mut self) {
-        for elem in self.display.iter_mut() {
-            *elem = 0;
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                self.display[y][x] = 0;
+            }
         }
         self.pc += 2;
     }
@@ -308,7 +310,7 @@ impl Chip8 {
 
     // add kk to v[x]
     fn op_7xkk(&mut self, x: u8, kk: u8) {
-        self.v[x as usize] = self.v[x as usize] + kk;
+        self.v[x as usize] = self.v[x as usize].wrapping_add(kk);
         // increment the program counter
         self.pc += 0x2;
     }
@@ -363,7 +365,7 @@ impl Chip8 {
         } else {
             self.v[0xF] = 0x0;
         }
-        self.v[x as usize] -= self.v[y as usize];
+        self.v[x as usize] = self.v[x as usize].wrapping_sub(self.v[y as usize]);
         // increment the program counter
         self.pc += 0x2;
     }
@@ -384,7 +386,7 @@ impl Chip8 {
         } else {
             self.v[0xF] = 0x0;
         }
-        self.v[x as usize] = self.v[y as usize] - self.v[x as usize];
+        self.v[x as usize] = self.v[y as usize].wrapping_sub(self.v[x as usize]);
         // increment the program counter
         self.pc += 0x2;
     }
@@ -440,11 +442,13 @@ impl Chip8 {
                     // detect coliision
                     let index =
                         x as usize + xline as usize + ((y as usize + yline as usize) * WIDTH);
-                    if self.display[index] == 1 {
+
+                    let x_cord: usize = (x + xline) as usize;
+                    let y_cord: usize = (y + yline) as usize;
+                    if self.display[y_cord][x_cord] == 1 {
                         self.v[0xF] = 1;
                     }
-                    self.display[index] ^= 1;
-                } else {
+                    self.display[y_cord][x_cord] ^= 1;
                 }
             }
         }
