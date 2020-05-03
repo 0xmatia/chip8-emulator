@@ -2,8 +2,6 @@ use rand::Rng;
 use std::error::Error;
 use std::fmt;
 use std::fs;
-#[allow(unused)]
-use std::io;
 use std::{thread, time};
 
 const RAM_SIZE: usize = 4096;
@@ -135,12 +133,12 @@ impl Chip8 {
         let n: u8 = (opcode & 0x000F) as u8;
         let x: u8 = ((opcode >> 8) & 0x000F) as u8;
         let y: u8 = ((opcode >> 4) & 0x000F) as u8;
-        println!("\nOpcode: {:#06X}", opcode);
-        println!(
-            "nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}",
-            nnn, kk, n, x, y
-        );
-        println!("State: {}", self);
+        // println!("\nOpcode: {:#06X}", opcode);
+        // println!(
+        //     "nnn: {:#05X}; kk: {:#04X}; n: {:#03X}; x: {:#03X}; y: {:#03X}",
+        //     nnn, kk, n, x, y
+        // );
+        // println!("State: {}", self);
         //Wait for input to proceed
         //let mut input = String::from("");
         // io::stdin()
@@ -347,7 +345,6 @@ impl Chip8 {
         let vx: u16 = self.v[x as usize] as u16;
         let vy: u16 = self.v[y as usize] as u16;
         let result: u16 = vx + vy;
-        println!("{:X}", result as u8);
         self.v[x as usize] = result as u8;
         if result > 0x00FF {
             self.v[0xF] = 0x1;
