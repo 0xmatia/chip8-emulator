@@ -10,7 +10,7 @@ const SCALE: usize = 20;
 pub struct Display {
     // the canvas I will be drawing to
     pub canvas: sdl2::render::Canvas<sdl2::video::Window>,
-    pub event_pump: sdl2::EventPump,
+    pub context: sdl2::Sdl,
 }
 
 impl Display {
@@ -27,7 +27,7 @@ impl Display {
                 .into_canvas()
                 .build()
                 .expect("Failed to build canvas"),
-            event_pump: sdl.event_pump().unwrap(),
+            context: sdl
         }
     }
     pub fn draw(&mut self, display: &[[u8; WIDTH]; HEIGHT]) -> Result<(), String> {

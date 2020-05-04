@@ -45,7 +45,7 @@ pub struct Chip8 {
     // Display
     pub display: [[u8; WIDTH]; HEIGHT],
 
-    keyboard: [bool; 16],
+    pub keyboard: [bool; 16],
 
     // STACK
     stack: [u16; STACK_SIZE],
