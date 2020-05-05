@@ -224,7 +224,7 @@ impl Chip8 {
 
     fn handle_timers(&mut self) {
         if self.delay_timer > 0 {
-            self.delay_timer -= 1
+            self.delay_timer -= 1;
         }
         if self.sound_timer > 0 {
             self.sound_timer -= 1;
@@ -238,6 +238,7 @@ impl Chip8 {
                 self.display[y][x] = 0;
             }
         }
+        self.draw = true;
         self.pc += 2;
     }
 
@@ -388,7 +389,7 @@ impl Chip8 {
         self.pc += 0x2;
     }
 
-    // shift right. if msb of vx is 1, carry flag is turned on
+    // shift left. if msb of vx is 1, carry flag is turned on
     fn op_8xye(&mut self, x: u8, _y: u8) {
         let msb = (self.v[x as usize] >> 7) & 0x1; // extract the msb
         self.v[0xf] = msb;
@@ -476,7 +477,7 @@ impl Chip8 {
 
     // wait for keypress, store result is vx
     fn op_fx0a(&mut self, x: u8) {
-        for i in 0x0..0x10 {
+        for i in 0x0..=0xF {
             if self.keyboard[i] {
                 self.v[x as usize] = i as u8;
                 self.pc += 2;
@@ -490,15 +491,16 @@ impl Chip8 {
         self.pc += 2;
     }
 
-    // set delay timer to vx
+    // Set sound timer = Vx.
     fn op_fx18(&mut self, x: u8) {
         self.sound_timer = self.v[x as usize];
         self.pc += 2;
     }
 
-    // i + vx are added, stored in i
+    // i + vx are added, stored in i//TODO: what?
     fn op_fx1e(&mut self, x: u8) {
         self.i += self.v[x as usize] as u16;
+        //self.v[0x0f] = if self.i > 0x0F00 { 1 } else { 0 };
         self.pc += 2;
     }
 
